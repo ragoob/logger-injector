@@ -1,5 +1,5 @@
 # logger injector
-## Worker that run into K8s cluster level or outside  looking into pods that match some metadata in start inject a sidecar fluentd container to push the app level logs to Elastic search
+## Worker that run into K8s cluster level or outside  looking into pods that match some metadata and inject a sidecar fluentd container to push the app level logs to Elastic search
 
 # Design 
 [![N|Solid](https://raw.githubusercontent.com/ragoob/logger-injector/develop/Injector.png)](#)
