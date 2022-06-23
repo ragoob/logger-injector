@@ -37,5 +37,5 @@
 | FLUENTD_IMAGE_REPOSITORY    |string       |  fluentd image (Environment variables default fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch) |
 
 ## How to install
-- cd build and populate the deployment.yaml files with the your environment
-- run ``` kubectl apply -f deployment.yaml ```
+- Open build directory and copy default.properties to the build dir and populate your environment variables value
+- run ``` .\deploy.sh ```
