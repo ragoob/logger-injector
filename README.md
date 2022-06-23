@@ -21,3 +21,21 @@
 - Support other K8s objects
 - Add more option to control elastic search and file formats
 - Support replication
+
+
+
+## Configurations
+  | Variable       | Type         |Description| 
+| :------------- |:-------------| :-----|
+| ELASTIC_HOST   | string       | elastic search host (Environment variables)
+| ELASTIC_PORT    | number        |  elastic search port  (Environment variables)
+| ELASTIC_PASSWORD    | number        |    elastic user password (Environment variables from Config Map)
+| ELASTIC_USER    | string        |     elastic user (Environment variables)  |
+| ELASTIC_SSL_VERIFY    | boolean       |    elastic skip ssl verify (Environment variables default false) |
+| ELASTIC_SCHEME    | string       |    elastic http/https (Environment variables default https)  |
+| ELASTIC_SSL_VERSION    |string       |    elastic tls version  (Environment variables default TLSv1_2) |
+| FLUENTD_IMAGE_REPOSITORY    |string       |  fluentd image (Environment variables default fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch) |
+
+## How to install
+- cd build and populate the deployment.yaml files with the your environment
+- run ``` kubectl apply -f deployment.yaml ```
