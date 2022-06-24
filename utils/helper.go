@@ -27,14 +27,15 @@ func ConvertToBooleanOrDefault(str string) bool {
 	return false
 }
 
-func MapToStruct(this map[string]interface{}, obj interface{}) {
+func MapToStruct(this map[string]interface{}, obj interface{}) error {
 	data, err := json.Marshal(this)
 	if err != nil {
-		return
+
+		return err
 	}
 	err = json.Unmarshal(data, &obj)
 	if err != nil {
-		return
+		return err
 	}
-	return
+	return nil
 }
