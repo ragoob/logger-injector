@@ -51,4 +51,4 @@
 
 ## How to install
 - Open build directory and copy default.properties to the build dir and populate your environment variables value
-- run ``` .\deploy.sh ```
+- run ``` deploy.sh ```
