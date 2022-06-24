@@ -1,6 +1,10 @@
 # logger injector
 ## Worker that run into K8s cluster level or outside  looking into pods that match some annotations and inject a sidecar fluentd container to push the app level logs to Elastic search
 
+![workflow](https://github.com/ragoob/logger-injector/actions/workflows/github-actions-lint.yml/badge.svg)
+![workflow](https://github.com/ragoob/logger-injector/actions/workflows/github-actions-build.yml/badge.svg)
+
+
 # Design 
 [![N|Solid](https://raw.githubusercontent.com/ragoob/logger-injector/develop/Injector.png)](#)
 
