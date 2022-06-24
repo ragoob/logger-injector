@@ -47,23 +47,23 @@ func getDefaultConfig(deployment *v1.Deployment) (map[string]interface{}, error)
 	configMap := make(map[string]interface{})
 	configMap[InjectorAgentAnnotation] = true
 	configMap[InjectorElastic] = Elastic{
-		Host:       os.Getenv("ELASTIC_HOST"),
-		Port:       ConvertToIntOrDefault(os.Getenv("ELASTIC_PORT")),
-		Password:   os.Getenv("ELASTIC_PASSWORD"),
-		User:       os.Getenv("ELASTIC_USER"),
-		SslVerify:  ConvertToBooleanOrDefault(os.Getenv("ELASTIC_SSL_VERIFY")),
-		Scheme:     os.Getenv("ELASTIC_SCHEME"),
-		SslVersion: os.Getenv("ELASTIC_SSL_VERSION"),
+		Host:       os.Getenv(ElasticHostEnvKey),
+		Port:       ConvertToIntOrDefault(os.Getenv(ElasticPortEnvKey)),
+		Password:   os.Getenv(ElasticPasswordEnvKey),
+		User:       os.Getenv(ElasticUserEnvKey),
+		SslVerify:  ConvertToBooleanOrDefault(os.Getenv(ElasticSslVerifyEnvKey)),
+		Scheme:     os.Getenv(ElasticSchemaEnvKey),
+		SslVersion: os.Getenv(ElasticSslVersionEnvKey),
 	}
-	configMap[FluentdImageRepository] = os.Getenv("FLUENTD_IMAGE_REPOSITORY")
+	configMap[FluentdImageRepository] = os.Getenv(FluentdImageRepositoryEnvKey)
 	if len(deployment.Spec.Template.Spec.Volumes) == 0 {
 		return nil, fmt.Errorf(fmt.Sprintf("the deployment [%s] should  contains at least one volumes", deployment.Name))
 	}
 	configMap[InjectorClaimName] = deployment.Spec.Template.Spec.Volumes[0].Name
 	configMap[InjectorLogTag] = fmt.Sprintf("log.%s", deployment.Name)
-	configMap[InjectorFlushInterval] = "1m"
-	configMap[InjectorLogPathPattern] = "log*.log"
-	configMap[InjectorStorageClassName] = "nfs-server-k8s-1.20"
-	configMap[FluentdVolumeSize] = "1Gi"
+	configMap[InjectorFlushInterval] = InjectorFlushIntervalDefault
+	configMap[InjectorLogPathPattern] = InjectorLogPathPatternDefault
+	configMap[InjectorStorageClassName] = ""
+	configMap[FluentdVolumeSize] = FluentdVolumeSizeDefault
 	return configMap, nil
 }
