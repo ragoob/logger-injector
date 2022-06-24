@@ -9,18 +9,24 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	CoreV1 "k8s.io/api/core/v1"
 	meta1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	watch_type "k8s.io/apimachinery/pkg/watch"
+	watchType "k8s.io/apimachinery/pkg/watch"
+	"os"
 	"sync"
 	"time"
 )
 
 type Watcher struct {
 	sync.Mutex
-	client utils.Client
+	client *utils.Client
 }
 
 func NewWatcher() *Watcher {
-	client := *utils.NewClient()
+	client, err := utils.NewClient()
+	if err != nil {
+		log.Errorf("failed to create K8s client [%v]", err)
+		log.Warning("daemon will exit")
+		os.Exit(1)
+	}
 	return &Watcher{
 		client: client,
 	}
@@ -55,7 +61,7 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 				}
 				annotations := obj.Spec.Template.GetObjectMeta().GetAnnotations()
 
-				if (event.Type == watch_type.Added || event.Type == watch_type.Modified) && annotations[utils.InjectorAgentAnnotation] != "" {
+				if (event.Type == watchType.Added || event.Type == watchType.Modified) && annotations[utils.InjectorAgentAnnotation] != "" {
 					w.Lock()
 					err := injector.Inject(ctx, obj)
 					if err != nil {
@@ -64,7 +70,7 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 					w.Unlock()
 
 				}
-
+				//K8s watcher session is 30 min, so we restart the go-routine every 30 min
 			case <-time.After(30 * time.Minute):
 				logrus.Info("Timeout, restarting event watcher")
 				done <- true
@@ -82,10 +88,11 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 
 }
 
-func (w *Watcher) Watch(ctx context.Context) error {
+func (w *Watcher) Watch(ctx context.Context) {
 	for {
+
 		if err := w.watchLoop(ctx); err != nil {
-			logrus.Error(err)
+			logrus.Errorf("error in watching loop [%v]", err)
 		}
 	}
 }

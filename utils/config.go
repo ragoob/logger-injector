@@ -5,7 +5,6 @@ import (
 	"fmt"
 	v1 "k8s.io/api/apps/v1"
 	"os"
-	"strings"
 )
 
 type Config struct {
@@ -25,7 +24,10 @@ func NewConfigInstanceFromAnnotation(deployment *v1.Deployment) (*Config, error)
 	if err != nil {
 		return nil, err
 	}
-	MapToStruct(configMap, &config)
+	parseErr := MapToStruct(configMap, &config)
+	if parseErr != nil {
+		return nil, parseErr
+	}
 	return &config, nil
 }
 func createConfigOrDefault(deployment *v1.Deployment) (map[string]interface{}, error) {
@@ -33,8 +35,8 @@ func createConfigOrDefault(deployment *v1.Deployment) (map[string]interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	for k, _ := range config {
-		if deployment.Spec.Template.GetObjectMeta().GetAnnotations()[k] != "" && k != InjectorElastic {
+	for k := range config {
+		if deployment.Spec.Template.GetObjectMeta().GetAnnotations()[k] != "" {
 
 			config[k] = deployment.Spec.Template.GetObjectMeta().GetAnnotations()[k]
 		}
@@ -59,9 +61,9 @@ func getDefaultConfig(deployment *v1.Deployment) (map[string]interface{}, error)
 		return nil, errors.New(fmt.Sprintf("the deployment [%s] should  contains at least one volumes", deployment.Name))
 	}
 	configMap[InjectorClaimName] = deployment.Spec.Template.Spec.Volumes[0].Name
-	configMap[InjectorLogTag] = fmt.Sprintf("log.%s", strings.Split(deployment.Name, "-")[0])
+	configMap[InjectorLogTag] = fmt.Sprintf("log.%s", deployment.Name)
 	configMap[InjectorFlushInterval] = "1m"
-	configMap[InjectorLogPathPattern] = "*.log"
+	configMap[InjectorLogPathPattern] = "log*.log"
 	configMap[InjectorStorageClassName] = "nfs-server-k8s-1.20"
 	configMap[FluentdVolumeSize] = "1Gi"
 	return configMap, nil

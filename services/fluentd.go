@@ -12,7 +12,7 @@ import (
 	meta1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateFluentdConfigMap(ctx context.Context, deployment *v1.Deployment, client loggerInjector.Client, config *loggerInjector.Config) (*CoreV1.ConfigMap, error) {
+func CreateFluentdConfigMap(ctx context.Context, deployment *v1.Deployment, client *loggerInjector.Client, config *loggerInjector.Config) (*CoreV1.ConfigMap, error) {
 	name := fmt.Sprintf("%s-fluentd", deployment.Name)
 	if existing, err := client.Instance.CoreV1().ConfigMaps(deployment.Namespace).Get(ctx, name,
 		meta1.GetOptions{}); err == nil && existing != nil {
@@ -101,23 +101,23 @@ func createSideCareContainerObject(deployment *v1.Deployment, config *loggerInje
 	container.Image = config.FluentdImageRepository
 	container.VolumeMounts = append(container.VolumeMounts, CoreV1.VolumeMount{
 		Name:      deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name,
-		MountPath: "/var/log/td-agent",
+		MountPath: utils.FluentdLogPath,
 	})
 	container.VolumeMounts = append(container.VolumeMounts, CoreV1.VolumeMount{
-		Name:      "buffer",
-		MountPath: "/var/log/fluentd-buffers",
+		Name:      utils.FluentdBufferVolumeName,
+		MountPath: utils.FluentdBufferPath,
 	})
 	container.VolumeMounts = append(container.VolumeMounts, CoreV1.VolumeMount{
-		Name:      "config-volume-fluentd",
-		MountPath: "/etc/fluent/config.d",
+		Name:      utils.FluentdConfigMapVolumeName,
+		MountPath: utils.FluentdConfigPath,
 	})
 	return container
 }
 
-func createFluentdVolumeObject(ctx context.Context, deployment *v1.Deployment, config *loggerInjector.Config, client loggerInjector.Client) (CoreV1.Volume, error) {
+func createFluentdVolumeObject(ctx context.Context, deployment *v1.Deployment, config *loggerInjector.Config, client *loggerInjector.Client) (CoreV1.Volume, error) {
 	volume := CoreV1.Volume{}
 	volume.PersistentVolumeClaim = &CoreV1.PersistentVolumeClaimVolumeSource{}
-	volume.Name = "buffer"
+	volume.Name = utils.FluentdBufferVolumeName
 	if config.InjectorStorageClassName != "" {
 		pvc, err := createFluentdPvc(ctx, deployment, config, client)
 		if err != nil {
@@ -135,15 +135,15 @@ func createFluentdVolumeObject(ctx context.Context, deployment *v1.Deployment, c
 
 func createFluentdConfigMapVolumeObject(configMap *CoreV1.ConfigMap) (CoreV1.Volume, error) {
 	volume := CoreV1.Volume{}
-	var defaultMode int32 = 511
-	volume.Name = "config-volume-fluentd"
+	mode := int32(utils.FluentdConfigMapVolumeDefaultMode)
+	volume.Name = utils.FluentdConfigMapVolumeName
 	volume.ConfigMap = &CoreV1.ConfigMapVolumeSource{}
 	volume.ConfigMap.Name = configMap.Name
-	volume.ConfigMap.DefaultMode = &defaultMode
+	volume.ConfigMap.DefaultMode = &mode
 	return volume, nil
 }
 
-func createFluentdPvc(ctx context.Context, deployment *v1.Deployment, config *loggerInjector.Config, client loggerInjector.Client) (*CoreV1.PersistentVolumeClaim, error) {
+func createFluentdPvc(ctx context.Context, deployment *v1.Deployment, config *loggerInjector.Config, client *loggerInjector.Client) (*CoreV1.PersistentVolumeClaim, error) {
 	pvc := &CoreV1.PersistentVolumeClaim{
 		Spec: CoreV1.PersistentVolumeClaimSpec{},
 	}
