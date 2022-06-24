@@ -2,7 +2,7 @@ package loggerInjector
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	utils "github.com/ragoob/logger-injector/utils"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -50,14 +50,12 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 			select {
 			case event, ok := <-channel:
 				if !ok {
-					log.Fatal("unexpected type")
-					error <- errors.New("unexpected type")
+					error <- fmt.Errorf("unexpected type")
 				}
 
 				obj, ok := event.Object.(*v1.Deployment)
 				if !ok {
-					log.Fatal("unexpected type")
-					error <- errors.New("unexpected type")
+					error <- fmt.Errorf("unexpected type")
 				}
 				annotations := obj.Spec.Template.GetObjectMeta().GetAnnotations()
 
