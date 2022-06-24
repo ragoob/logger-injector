@@ -12,7 +12,7 @@ import (
 )
 
 type Injector struct {
-	client utils.Client
+	client *utils.Client
 }
 
 func (i *Injector) Inject(ctx context.Context, deployment *v1.Deployment) error {

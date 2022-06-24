@@ -6,14 +6,14 @@
 
 # How it works
 - The injector run on cluster level and watch all objects changes and if it contains special annotations the inector start modify the deployment or stateful 
-  pod to add fluentd side car containers configured to look into the pod logs volume and stream the logs to elastic search 
+  pod to add fluentd side-car containers configured to look into the pod logs volume and stream the logs to elastic search 
   
 ## Features
 
 - automatic Injector (fluentd sidecar container)
 - You do not need to configure anything to your app just write your logs into volume
 - Support multiple worker threads
-- One time install per cluster
+- One time installation per cluster
 - Now support watching deployments only
 - support in-cluster configuration or kube config if you need to run it outside K8s cluster
 ## Tech Stack
@@ -23,6 +23,7 @@
 - Support other K8s objects
 - Add more option to control elastic search and file formats
 - Support replication
+- Handle multiple out not more than elastic search  
 
 
 
@@ -38,7 +39,6 @@
 | ELASTIC_SSL_VERSION    |string       |    elastic tls version  default TLSv1_2 |
 | FLUENTD_IMAGE_REPOSITORY    |string       |  fluentd image default fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch |
 | IN_CLUSTER_CONFIG    |boolean       |  Set it true if the app will run inside the cluster  |
-| KUBE_CONFIG_PATH    |boolean       |  working when IN_CLUSTER_CONFIG is false and the default value is user home dir |
 
 ## App required annotations 
 | name | type | Description |
@@ -52,5 +52,12 @@
 | logger.injector.io/fluentd-vol-size | string | Volume storage for fluentd buffer PV default 1 Gi |
 
 ## How to install
+ ### In cluster setup
 - Open build directory and copy default.properties to the build dir and populate your environment variables value
 - run ``` deploy.sh ```
+### Docker stand-alone
+- create .env file from default.properties
+- populate all required environment variables
+- Make sure you have docker-compose 
+- Make sure you have config file inside ~/.kube/ in your host machine
+- Run ``` docker-compose up --build -d ```

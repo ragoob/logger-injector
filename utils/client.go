@@ -2,7 +2,6 @@ package loggerInjector
 
 import (
 	"flag"
-	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	restClient "k8s.io/client-go/rest"
@@ -15,13 +14,13 @@ type Client struct {
 	Instance *kubernetes.Clientset
 }
 
-func NewClient() *Client {
+func NewClient() (*Client, error) {
 	var config *rest.Config
 	if ConvertToBooleanOrDefault(os.Getenv(InClusterConfig)) {
 		_config, err := rest.InClusterConfig()
 		if err != nil {
 			if err != nil {
-				log.Errorf("failed to create k8s config from in cluster configuration [%s]", err.Error())
+				return nil, err
 			}
 		}
 
@@ -30,32 +29,28 @@ func NewClient() *Client {
 	} else {
 		_config, err := fromKubeConfig()
 		if err != nil {
-			log.Errorf("failed to create client from kube config [%] \n", err.Error())
-			log.Warning("daemon will exit \n")
-			os.Exit(2)
+			return nil, err
 		}
 
 		config = _config
 	}
-	clientSet, _ := kubernetes.NewForConfig(config)
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		Instance: clientSet,
-	}
+	}, nil
 
 }
 
 func fromKubeConfig() (*restClient.Config, error) {
 	var kubeConfig *string
-	if os.Getenv(KubeConfigPathEnv) != "" {
-		kubeConfig = flag.String("kubeconfig", os.Getenv(KubeConfigPathEnv), "(optional) absolute path to the kubeconfig file")
-	} else {
-		if home, err := os.UserHomeDir(); home != "" && err == nil {
-			kubeConfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-			if kubeConfig != nil {
-				if err != nil {
-					log.Errorf("failed to find k8s config in dir [%s] [%s] \n", filepath.Join(home, ".kube", "config"), err.Error())
-					panic(err)
-				}
+	if home, err := os.UserHomeDir(); home != "" && err == nil {
+		kubeConfig = flag.String("kubeConfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		if kubeConfig != nil {
+			if err != nil {
+				return nil, err
 			}
 		}
 	}

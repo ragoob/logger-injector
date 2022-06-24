@@ -3,7 +3,6 @@ module github.com/ragoob/logger-injector
 go 1.18
 
 require (
-	github.com/joho/godotenv v1.4.0
 	github.com/sirupsen/logrus v1.8.1
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
