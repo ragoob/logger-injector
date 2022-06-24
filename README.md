@@ -57,7 +57,7 @@
 
 ## How to install
  ### In cluster setup
-- Open build directory and copy default.properties to the build dir and populate your environment variables value
+- Open bin directory and copy default.properties to the bin dir and populate your environment variables value
 - run ``` deploy.sh ```
 ### Docker stand-alone
 - create .env file from default.properties
