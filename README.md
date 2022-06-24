@@ -24,7 +24,7 @@
 
 
 
-## Configurations
+## Injector Configurations
   | Variable       | Type         |Description| 
 | :------------- |:-------------| :-----|
 | ELASTIC_HOST   | string       | elastic search host 
@@ -38,6 +38,16 @@
 | IN_CLUSTER_CONFIG    |boolean       |  Set it true if the app will run inside the cluster  |
 | KUBE_CONFIG_PATH    |boolean       |  working when IN_CLUSTER_CONFIG is false and the default value is user home dir |
 
+## App required annotations 
+| name | type | Description |
+| --------------- | --------------- | --------------- |
+| logger.injector.io/agent-inject | boolean  | Required to be true |
+| logger.injector.io/log-tag-name | string | Elastic search tag for create index |
+| logger.injector.io/flush-interval | string | Fluentd flush interval default 1m |
+| logger.injector.io/flush-interval | string | Fluentd flush interval default 1m |
+| logger.injector.io/log-path-pattern | string | Your log file pattern such as log*.txt default log*.log |
+| logger.injector.io/storage-class-name | string | Storage class Name to create PVC for fluentd buffer default emptyDir{} |
+| logger.injector.io/fluentd-vol-size | string | Volume storage for fluentd buffer PV default 1 Gi |
 
 ## How to install
 - Open build directory and copy default.properties to the build dir and populate your environment variables value
