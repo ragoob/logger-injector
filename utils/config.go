@@ -1,7 +1,6 @@
 package loggerInjector
 
 import (
-	"errors"
 	"fmt"
 	v1 "k8s.io/api/apps/v1"
 	"os"
@@ -58,7 +57,7 @@ func getDefaultConfig(deployment *v1.Deployment) (map[string]interface{}, error)
 	}
 	configMap[FluentdImageRepository] = os.Getenv("FLUENTD_IMAGE_REPOSITORY")
 	if len(deployment.Spec.Template.Spec.Volumes) == 0 {
-		return nil, errors.New(fmt.Sprintf("the deployment [%s] should  contains at least one volumes", deployment.Name))
+		return nil, fmt.Errorf(fmt.Sprintf("the deployment [%s] should  contains at least one volumes", deployment.Name))
 	}
 	configMap[InjectorClaimName] = deployment.Spec.Template.Spec.Volumes[0].Name
 	configMap[InjectorLogTag] = fmt.Sprintf("log.%s", deployment.Name)
