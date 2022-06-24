@@ -19,4 +19,15 @@ const (
 	FluentdBufferVolumeName           = "buffer"
 	FluentdConfigMapVolumeName        = "config-volume-fluentd"
 	FluentdConfigMapVolumeDefaultMode = 511
+	ElasticHostEnvKey                 = "ELASTIC_HOST"
+	ElasticPortEnvKey                 = "ELASTIC_PORT"
+	ElasticPasswordEnvKey             = "ELASTIC_PASSWORD"
+	ElasticUserEnvKey                 = "ELASTIC_USER"
+	ElasticSslVerifyEnvKey            = "ELASTIC_SSL_VERIFY"
+	ElasticSchemaEnvKey               = "ELASTIC_SCHEME"
+	ElasticSslVersionEnvKey           = "ELASTIC_SSL_VERSION"
+	FluentdImageRepositoryEnvKey      = "FLUENTD_IMAGE_REPOSITORY"
+	FluentdVolumeSizeDefault          = "1Gi"
+	InjectorLogPathPatternDefault     = "log*.log"
+	InjectorFlushIntervalDefault      = "1m"
 )
