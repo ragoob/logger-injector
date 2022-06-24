@@ -14,8 +14,10 @@
 - You do not need to configure anything to your app just write your logs into volume
 - Support multiple worker threads
 - One time install per cluster
-- Now support watching deployment
+- Now support watching deployments only
 - support in-cluster configuration or kube config if you need to run it outside K8s cluster
+## Tech Stack
+- Go
 
 ## Todo
 - Support other K8s objects
