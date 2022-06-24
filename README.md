@@ -27,14 +27,17 @@
 ## Configurations
   | Variable       | Type         |Description| 
 | :------------- |:-------------| :-----|
-| ELASTIC_HOST   | string       | elastic search host (Environment variables)
-| ELASTIC_PORT    | number        |  elastic search port  (Environment variables)
-| ELASTIC_PASSWORD    | number        |    elastic user password (Environment variables from Config Map)
-| ELASTIC_USER    | string        |     elastic user (Environment variables)  |
-| ELASTIC_SSL_VERIFY    | boolean       |    elastic skip ssl verify (Environment variables default false) |
-| ELASTIC_SCHEME    | string       |    elastic http/https (Environment variables default https)  |
-| ELASTIC_SSL_VERSION    |string       |    elastic tls version  (Environment variables default TLSv1_2) |
-| FLUENTD_IMAGE_REPOSITORY    |string       |  fluentd image (Environment variables default fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch) |
+| ELASTIC_HOST   | string       | elastic search host 
+| ELASTIC_PORT    | number        |  elastic search port  
+| ELASTIC_PASSWORD    | number        |    elastic user password
+| ELASTIC_USER    | string        |     elastic user   |
+| ELASTIC_SSL_VERIFY    | boolean       |    elastic skip ssl verify  default false |
+| ELASTIC_SCHEME    | string       |    elastic http/https  default https  |
+| ELASTIC_SSL_VERSION    |string       |    elastic tls version  default TLSv1_2 |
+| FLUENTD_IMAGE_REPOSITORY    |string       |  fluentd image default fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch |
+| IN_CLUSTER_CONFIG    |boolean       |  Set it true if the app will run inside the cluster  |
+| KUBE_CONFIG_PATH    |boolean       |  working when IN_CLUSTER_CONFIG is false and the default value is user home dir |
+
 
 ## How to install
 - Open build directory and copy default.properties to the build dir and populate your environment variables value
