@@ -12,4 +12,6 @@ const (
 	FluentDConfigData          = "fluent.conf"
 	FluentdImageRepository     = "logger-fluentd-image-repository"
 	FluentdVolumeSize          = "logger.injector.io/fluentd-vol-size"
+	KubeConfigPathEnv          = "KUBE_CONFIG_PATH"
+	InClusterConfig            = "IN_CLUSTER_CONFIG"
 )
