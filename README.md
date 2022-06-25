@@ -9,7 +9,7 @@
 [![N|Solid](https://raw.githubusercontent.com/ragoob/logger-injector/main/Injector.png)](#)
 
 # How it works
-- The injector run on cluster level and watch all objects changes and if it contains special annotations the inector start modify the deployment or stateful 
+  The injector run on cluster level and watch all objects changes and if it contains special annotations the inector start modify the deployment or stateful 
   pod to add fluentd side-car containers configured to look into the pod logs volume and stream the logs to elastic search 
   
 ## Features
