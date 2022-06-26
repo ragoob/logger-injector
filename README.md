@@ -25,7 +25,7 @@
 ## Todo
 - Add more option to control elastic search and file formats
 - Support replication
-- Handle multiple out not more than elastic search  
+- Handle multiple streamer more than elastic search  
 
 
 
