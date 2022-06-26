@@ -1,9 +1,8 @@
 package loggerInjector
 
 const (
-	Deployment           = "deployments"
-	Stateful             = "statefulsets"
-	ObjectAvailable      = "Available"
-	ObjectProgressing    = "Progressing"
-	ObjectReplicaFailure = "ReplicaFailure"
+	Deployment = "deployments"
+	Stateful   = "statefulsets"
+	DaemonSet  = "daemonsets"
+	Job        = "jobs"
 )
