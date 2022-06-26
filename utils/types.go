@@ -5,4 +5,5 @@ const (
 	Stateful   = "statefulsets"
 	DaemonSet  = "daemonsets"
 	Job        = "jobs"
+	CronJob    = "cronjobs"
 )

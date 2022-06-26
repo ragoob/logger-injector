@@ -176,6 +176,19 @@ func (w *Watcher) ensureObject(event watchType.Event) (*models.Result, bool) {
 			Annotations: obj.Spec.Template.GetObjectMeta().GetAnnotations(),
 			Labels:      obj.Spec.Template.GetObjectMeta().GetLabels(),
 		}, ok
+
+	case utils.CronJob:
+		obj, ok := event.Object.(*patchV1.CronJob)
+		if !ok {
+			return nil, ok
+		}
+		return &models.Result{
+			Name:        obj.Name,
+			Namespace:   obj.Namespace,
+			Spec:        &obj.Spec.JobTemplate.Spec.Template.Spec,
+			Annotations: obj.Spec.JobTemplate.Spec.Template.GetObjectMeta().GetAnnotations(),
+			Labels:      obj.Spec.JobTemplate.Spec.Template.GetObjectMeta().GetLabels(),
+		}, ok
 	default:
 		return nil, false
 	}
@@ -192,7 +205,7 @@ func WatchAll(ctx context.Context, config *utils.Config) {
 		os.Exit(1)
 	}
 
-	resources := []string{utils.Deployment, utils.Stateful, utils.DaemonSet, utils.Job}
+	resources := []string{utils.Deployment, utils.Stateful, utils.DaemonSet, utils.Job, utils.CronJob}
 	for _, v := range resources {
 		watcher := newWatcher(v, config, client)
 		go watcher.watch(ctx)
