@@ -18,13 +18,11 @@
 - You do not need to configure anything to your app just write your logs into volume
 - Support multiple worker threads
 - One time installation per cluster
-- Now support watching deployments only
 - support in-cluster configuration or kube config if you need to run it outside K8s cluster
 ## Tech Stack
 - Go
 
 ## Todo
-- Support other K8s objects
 - Add more option to control elastic search and file formats
 - Support replication
 - Handle multiple out not more than elastic search  
