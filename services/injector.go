@@ -2,64 +2,70 @@ package loggerInjector
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	loggerInjector "github.com/ragoob/logger-injector/utils"
+	models "github.com/ragoob/logger-injector/models"
 	utils "github.com/ragoob/logger-injector/utils"
-	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/apps/v1"
-	CoreV1 "k8s.io/api/core/v1"
-	meta1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Injector struct {
 	client *utils.Client
+	Kind   string
 }
 
-func (i *Injector) Inject(ctx context.Context, deployment *v1.Deployment) error {
-	if utils.ConvertToBooleanOrDefault(deployment.Spec.Template.GetObjectMeta().GetLabels()[utils.InjectorInjectedAnnotation]) || ifSideCarExists(deployment) {
-		log.Debugf("logger sidecar already injected  to [%s-%s]", deployment.Namespace, deployment.Name)
-		return nil
+func (i *Injector) Inject(ctx context.Context, result *models.Result, config *utils.Config) error {
+	if !ensureCanAddSideCar(result) {
+		return fmt.Errorf("logger sidecar already injected  to [%s-%s]", result.Namespace, result.Name)
 	}
-	config, err := utils.NewConfigInstanceFromAnnotation(deployment)
+	if len(result.Spec.Volumes) == 0 {
+		return fmt.Errorf("the object should contain at least one volume")
+	}
+	annotation, err := utils.NewConfigInstanceFromAnnotation(result.Name, result.Spec.Volumes[0].Name, result.Annotations)
 	if err != nil {
 		return err
 	}
-	configMap, err := CreateFluentdConfigMap(ctx, deployment, i.client, config)
-	if err != nil {
-		log.Errorf("error creating configMap: [%s]", err.Error())
-	}
-	return i.injectFluentdContainer(ctx, deployment, config, configMap)
+
+	return i.injectFluentdContainer(ctx, result, annotation, config)
 }
 
-func (i *Injector) injectFluentdContainer(ctx context.Context, deployment *v1.Deployment, config *loggerInjector.Config, configMap *CoreV1.ConfigMap) error {
-
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, createSideCareContainerObject(deployment, config))
-	fluentdVolume, err := createFluentdVolumeObject(ctx, deployment, config, i.client)
+func (i *Injector) injectFluentdContainer(ctx context.Context, result *models.Result, annotation *utils.Annotation, config *utils.Config) error {
+	configMap, err := createFluentdConfigMap(ctx, i.client, result.Namespace, result.Name, annotation, config)
 	if err != nil {
 		return err
 	}
-	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, fluentdVolume)
+	mainContainer := result.Spec.Containers[0]
+	result.Spec.Containers = append(result.Spec.Containers, createSideCareContainerObject(mainContainer, result.Name, config))
+	fluentdVolume, err := createFluentdVolumeObject(ctx, result.Namespace, result.Name, annotation, i.client)
+	if err != nil {
+		return err
+	}
+	result.Spec.Volumes = append(result.Spec.Volumes, fluentdVolume)
 	fluentdConfigVolume, err := createFluentdConfigMapVolumeObject(configMap)
 	if err != nil {
 		return err
 	}
-	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, fluentdConfigVolume)
-	deployment.Spec.Template.Labels[utils.InjectorInjectedAnnotation] = "true"
-	_, updateErr := i.client.Instance.AppsV1().Deployments(deployment.Namespace).Update(context.TODO(), deployment, meta1.UpdateOptions{})
-	if updateErr == nil {
-		log.Infof("logger sideCar injected successfuly to [%s-%s]", deployment.Namespace, deployment.Name)
+	result.Spec.Volumes = append(result.Spec.Volumes, fluentdConfigVolume)
+	result.Labels[utils.InjectorInjectedAnnotation] = "true"
+	payload := models.PatchPayload{
+		Spec: models.Spec{
+			Template: models.Template{
+				Spec: result.Spec,
+				MetaData: models.MetaData{
+					Labels:      result.Labels,
+					Annotations: result.Annotations,
+				},
+			},
+		},
 	}
-	return updateErr
-}
-
-func ifSideCarExists(deployment *v1.Deployment) bool {
-	name := fmt.Sprintf("%s-fluentd-logger", deployment.Name)
-
-	for _, c := range deployment.Spec.Template.Spec.Containers {
-		if c.Name == name {
-
-			return true
-		}
+	bytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
 	}
-	return false
+
+	_, patchErr := i.client.Patch(ctx, result.Namespace, result.Name, i.Kind, bytes, v1.PatchOptions{})
+	if patchErr != nil {
+		return patchErr
+	}
+	return nil
 }
