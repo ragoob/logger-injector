@@ -3,28 +3,28 @@ package loggerInjector
 import (
 	"context"
 	"fmt"
+	models "github.com/ragoob/logger-injector/models"
 	loggerInjector "github.com/ragoob/logger-injector/utils"
 	utils "github.com/ragoob/logger-injector/utils"
 	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/apps/v1"
 	CoreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateFluentdConfigMap(ctx context.Context, deployment *v1.Deployment, client *loggerInjector.Client, config *loggerInjector.Config) (*CoreV1.ConfigMap, error) {
-	name := fmt.Sprintf("%s-fluentd", deployment.Name)
-	if existing, err := client.Instance.CoreV1().ConfigMaps(deployment.Namespace).Get(ctx, name,
+func CreateFluentdConfigMap(ctx context.Context, nameSpace string, objectName string, client *loggerInjector.Client, annotation *loggerInjector.Annotation, config *utils.Config) (*CoreV1.ConfigMap, error) {
+	name := fmt.Sprintf("%s-fluentd", objectName)
+	if existing, err := client.Instance.CoreV1().ConfigMaps(nameSpace).Get(ctx, name,
 		meta1.GetOptions{}); err == nil && existing != nil {
 		log.Infof("Deleting exsisting configMap [%s]", name)
-		err := client.Instance.CoreV1().ConfigMaps(deployment.Namespace).Delete(ctx, name, meta1.DeleteOptions{})
+		err := client.Instance.CoreV1().ConfigMaps(nameSpace).Delete(ctx, name, meta1.DeleteOptions{})
 		if err != nil {
 			log.Errorf("failed to delete configmap [%s]", name)
 			return nil, err
 		}
 	}
 
-	data, err := createDataObject(config)
+	data, err := createDataObject(annotation, config)
 	if err != nil {
 		return nil, err
 	}
@@ -35,11 +35,11 @@ func CreateFluentdConfigMap(ctx context.Context, deployment *v1.Deployment, clie
 		},
 		ObjectMeta: meta1.ObjectMeta{
 			Name:      name,
-			Namespace: deployment.Namespace,
+			Namespace: nameSpace,
 		},
 		Data: data,
 	}
-	result, err := client.Instance.CoreV1().ConfigMaps(deployment.Namespace).Create(ctx, &configMap, meta1.CreateOptions{})
+	result, err := client.Instance.CoreV1().ConfigMaps(nameSpace).Create(ctx, &configMap, meta1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func CreateFluentdConfigMap(ctx context.Context, deployment *v1.Deployment, clie
 	return result, nil
 }
 
-func createDataObject(config *loggerInjector.Config) (map[string]string, error) {
+func createDataObject(annotation *loggerInjector.Annotation, config *utils.Config) (map[string]string, error) {
 	data := make(map[string]string)
 	conf := fmt.Sprintf(`
                <source>
@@ -77,9 +77,9 @@ func createDataObject(config *loggerInjector.Config) (map[string]string, error) 
         logstash_prefix ${tag}
         flush_interval %s
       </match> 
-           `, "/var/log/td-agent/"+config.InjectorLogPathPattern,
-		"/var/log/td-agent/"+config.InjectorLogPathPattern+".pos",
-		config.InjectorLogTag,
+           `, "/var/log/td-agent/"+annotation.InjectorLogPathPattern,
+		"/var/log/td-agent/"+annotation.InjectorLogPathPattern+".pos",
+		annotation.InjectorLogTag,
 		config.Elastic.Host,
 		config.Elastic.Port,
 		config.Elastic.User,
@@ -87,20 +87,20 @@ func createDataObject(config *loggerInjector.Config) (map[string]string, error) 
 		config.Elastic.SslVersion,
 		config.Elastic.Scheme,
 		config.Elastic.SslVerify,
-		config.InjectorFlushInterval,
+		annotation.InjectorFlushInterval,
 	)
 
 	data[utils.FluentDConfigData] = conf
 	return data, nil
 }
 
-func createSideCareContainerObject(deployment *v1.Deployment, config *loggerInjector.Config) CoreV1.Container {
+func createSideCareContainerObject(mainContainer CoreV1.Container, objectName string, config *loggerInjector.Config) CoreV1.Container {
 	container := CoreV1.Container{}
-	container.Name = fmt.Sprintf("%s-fluentd-logger", deployment.Name)
-	container.ImagePullPolicy = deployment.Spec.Template.Spec.Containers[0].ImagePullPolicy
+	container.Name = fmt.Sprintf("%s-fluentd-logger", objectName)
+	container.ImagePullPolicy = mainContainer.ImagePullPolicy
 	container.Image = config.FluentdImageRepository
 	container.VolumeMounts = append(container.VolumeMounts, CoreV1.VolumeMount{
-		Name:      deployment.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name,
+		Name:      mainContainer.VolumeMounts[0].Name,
 		MountPath: utils.FluentdLogPath,
 	})
 	container.VolumeMounts = append(container.VolumeMounts, CoreV1.VolumeMount{
@@ -114,12 +114,12 @@ func createSideCareContainerObject(deployment *v1.Deployment, config *loggerInje
 	return container
 }
 
-func createFluentdVolumeObject(ctx context.Context, deployment *v1.Deployment, config *loggerInjector.Config, client *loggerInjector.Client) (CoreV1.Volume, error) {
+func createFluentdVolumeObject(ctx context.Context, nameSpace string, objectName string, config *loggerInjector.Annotation, client *loggerInjector.Client) (CoreV1.Volume, error) {
 	volume := CoreV1.Volume{}
 	volume.PersistentVolumeClaim = &CoreV1.PersistentVolumeClaimVolumeSource{}
 	volume.Name = utils.FluentdBufferVolumeName
 	if config.InjectorStorageClassName != "" {
-		pvc, err := createFluentdPvc(ctx, deployment, config, client)
+		pvc, err := createFluentdPvc(ctx, nameSpace, objectName, config, client)
 		if err != nil {
 			return volume, err
 		}
@@ -143,12 +143,12 @@ func createFluentdConfigMapVolumeObject(configMap *CoreV1.ConfigMap) (CoreV1.Vol
 	return volume, nil
 }
 
-func createFluentdPvc(ctx context.Context, deployment *v1.Deployment, config *loggerInjector.Config, client *loggerInjector.Client) (*CoreV1.PersistentVolumeClaim, error) {
+func createFluentdPvc(ctx context.Context, nameSpace string, objectName string, config *loggerInjector.Annotation, client *loggerInjector.Client) (*CoreV1.PersistentVolumeClaim, error) {
 	pvc := &CoreV1.PersistentVolumeClaim{
 		Spec: CoreV1.PersistentVolumeClaimSpec{},
 	}
-	name := fmt.Sprintf("fluentd-log-%s", deployment.Name)
-	existing, getErr := client.Instance.CoreV1().PersistentVolumeClaims(deployment.Namespace).Get(ctx, name, meta1.GetOptions{})
+	name := fmt.Sprintf("fluentd-log-%s", objectName)
+	existing, getErr := client.Instance.CoreV1().PersistentVolumeClaims(nameSpace).Get(ctx, name, meta1.GetOptions{})
 	if getErr == nil && existing != nil {
 		return existing, nil
 	}
@@ -160,9 +160,38 @@ func createFluentdPvc(ctx context.Context, deployment *v1.Deployment, config *lo
 			CoreV1.ResourceStorage: resource.MustParse(config.FluentdVolumeSize),
 		},
 	}
-	pvc, err := client.Instance.CoreV1().PersistentVolumeClaims(deployment.Namespace).Create(ctx, pvc, meta1.CreateOptions{})
+	pvc, err := client.Instance.CoreV1().PersistentVolumeClaims(nameSpace).Create(ctx, pvc, meta1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
 	return pvc, nil
+}
+func ensureCanAddSideCar(result *models.Result) bool {
+	ok := true
+	name := fmt.Sprintf("%s-fluentd-logger", result.Name)
+	isMarkedAsInjected := utils.ConvertToBooleanOrDefault(result.Labels[utils.InjectorInjectedAnnotation])
+	if isMarkedAsInjected {
+		return false
+	}
+
+	for _, c := range result.Spec.Containers {
+		if c.Name == name {
+			return false
+		}
+	}
+
+	for _, v := range result.Spec.Volumes {
+		if v.Name == utils.FluentdBufferVolumeName || v.Name == utils.FluentdConfigMapVolumeName {
+			return false
+		}
+	}
+	return ok
+}
+func createFluentdConfigMap(ctx context.Context, client *utils.Client, nameSpace string, objectName string, annotation *loggerInjector.Annotation, config *loggerInjector.Config) (*CoreV1.ConfigMap, error) {
+	configMap, err := CreateFluentdConfigMap(ctx, nameSpace, objectName, client, annotation, config)
+	if err != nil {
+		log.Errorf("error creating configMap: [%s]", err.Error())
+		return nil, err
+	}
+	return configMap, nil
 }
