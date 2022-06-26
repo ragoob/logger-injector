@@ -26,7 +26,7 @@
 - [x] Stateful
 - [x] DaemonSet
 - [x] Job
-- [ ] Cron Job
+- [x] Cron Job
 ## Todo
 - Add more option to control elastic search and file formats
 - Support replication
