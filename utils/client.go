@@ -79,6 +79,8 @@ func (c *Client) Patch(ctx context.Context, nameSpace string, name string, kind 
 		return c.Instance.AppsV1().DaemonSets(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
 	case Job:
 		return c.Instance.BatchV1().Jobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
+	case CronJob:
+		return c.Instance.BatchV1().CronJobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
 	default:
 		return nil, fmt.Errorf("the %s type is not supported", kind)
 	}
@@ -94,6 +96,8 @@ func (c *Client) GetWatcher(ctx context.Context, kind string, opts metaV1.ListOp
 		return c.Instance.AppsV1().DaemonSets(CoreV1.NamespaceAll).Watch(ctx, opts)
 	case Job:
 		return c.Instance.BatchV1().Jobs(CoreV1.NamespaceAll).Watch(ctx, opts)
+	case CronJob:
+		return c.Instance.BatchV1().CronJobs(CoreV1.NamespaceAll).Watch(ctx, opts)
 	default:
 		return nil, fmt.Errorf("the %s type is not supported", kind)
 	}

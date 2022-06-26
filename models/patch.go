@@ -2,8 +2,8 @@ package loggerInjector
 
 import v1 "k8s.io/api/core/v1"
 
-type PatchPayload struct {
-	Spec Spec `json:"spec"`
+type PatchPayload[T Spec | CronJobSpec] struct {
+	Spec T `json:"spec"`
 }
 type Spec struct {
 	Template Template `json:"template"`
@@ -15,4 +15,11 @@ type Template struct {
 type MetaData struct {
 	Annotations map[string]string `json:"annotations"`
 	Labels      map[string]string `json:"labels"`
+}
+type JobTemplate struct {
+	Spec Spec `json:"spec"`
+}
+
+type CronJobSpec struct {
+	JobTemplate JobTemplate `json:"jobTemplate"`
 }

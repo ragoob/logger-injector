@@ -47,18 +47,8 @@ func (i *Injector) injectFluentdContainer(ctx context.Context, result *models.Re
 	}
 	result.Spec.Volumes = append(result.Spec.Volumes, fluentdConfigVolume)
 	result.Labels[utils.InjectorInjectedAnnotation] = "true"
-	payload := models.PatchPayload{
-		Spec: models.Spec{
-			Template: models.Template{
-				Spec: result.Spec,
-				MetaData: models.MetaData{
-					Labels:      result.Labels,
-					Annotations: result.Annotations,
-				},
-			},
-		},
-	}
-	bytes, err := json.Marshal(payload)
+
+	bytes, err := i.preparePatchPayload(result)
 	if err != nil {
 		return err
 	}
@@ -68,4 +58,37 @@ func (i *Injector) injectFluentdContainer(ctx context.Context, result *models.Re
 		return patchErr
 	}
 	return nil
+}
+func (i *Injector) preparePatchPayload(result *models.Result) ([]byte, error) {
+	if i.Kind == utils.CronJob {
+		payload := models.PatchPayload[models.CronJobSpec]{
+			Spec: models.CronJobSpec{
+				JobTemplate: models.JobTemplate{
+					Spec: models.Spec{
+						Template: models.Template{
+							Spec: result.Spec,
+							MetaData: models.MetaData{
+								Labels:      result.Labels,
+								Annotations: result.Annotations,
+							},
+						},
+					},
+				},
+			},
+		}
+		return json.Marshal(payload)
+	} else {
+		payload := models.PatchPayload[models.Spec]{
+			Spec: models.Spec{
+				Template: models.Template{
+					Spec: result.Spec,
+					MetaData: models.MetaData{
+						Labels:      result.Labels,
+						Annotations: result.Annotations,
+					},
+				},
+			},
+		}
+		return json.Marshal(payload)
+	}
 }
