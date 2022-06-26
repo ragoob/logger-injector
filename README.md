@@ -21,7 +21,12 @@
 - support in-cluster configuration or kube config if you need to run it outside K8s cluster
 ## Tech Stack
 - Go
-
+## Supported K8s workloads
+- [x] Deployment
+- [x] Stateful
+- [x] DaemonSet
+- [x] Job
+- [ ] Cron Job
 ## Todo
 - Add more option to control elastic search and file formats
 - Support replication
