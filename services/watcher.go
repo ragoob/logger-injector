@@ -8,6 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/apps/v1"
+	patchV1 "k8s.io/api/batch/v1"
+
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	watchType "k8s.io/apimachinery/pkg/watch"
 	"os"
@@ -141,7 +143,39 @@ func (w *Watcher) ensureObject(event watchType.Event) (*models.Result, bool) {
 			Labels:      obj.Spec.Template.GetObjectMeta().GetLabels(),
 			Conditions:  conditions,
 		}, ok
+	case utils.DaemonSet:
+		obj, ok := event.Object.(*v1.DaemonSet)
+		if !ok {
+			return nil, ok
+		}
+		var conditions []models.Condition
+		for _, v := range obj.Status.Conditions {
+			conditions = append(conditions, models.Condition{
+				Status: v.Status,
+				Type:   string(v.Type),
+			})
+		}
+		return &models.Result{
+			Name:        obj.Name,
+			Namespace:   obj.Namespace,
+			Spec:        &obj.Spec.Template.Spec,
+			Annotations: obj.Spec.Template.GetObjectMeta().GetAnnotations(),
+			Labels:      obj.Spec.Template.GetObjectMeta().GetLabels(),
+			Conditions:  conditions,
+		}, ok
 
+	case utils.Job:
+		obj, ok := event.Object.(*patchV1.Job)
+		if !ok {
+			return nil, ok
+		}
+		return &models.Result{
+			Name:        obj.Name,
+			Namespace:   obj.Namespace,
+			Spec:        &obj.Spec.Template.Spec,
+			Annotations: obj.Spec.Template.GetObjectMeta().GetAnnotations(),
+			Labels:      obj.Spec.Template.GetObjectMeta().GetLabels(),
+		}, ok
 	default:
 		return nil, false
 	}
@@ -158,7 +192,7 @@ func WatchAll(ctx context.Context, config *utils.Config) {
 		os.Exit(1)
 	}
 
-	resources := []string{utils.Deployment, utils.Stateful}
+	resources := []string{utils.Deployment, utils.Stateful, utils.DaemonSet, utils.Job}
 	for _, v := range resources {
 		watcher := newWatcher(v, config, client)
 		go watcher.watch(ctx)
