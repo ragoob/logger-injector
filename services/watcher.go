@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/apps/v1"
 	patchV1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	watchType "k8s.io/apimachinery/pkg/watch"
@@ -182,10 +183,14 @@ func (w *Watcher) ensureObject(event watchType.Event) (*models.Result, bool) {
 		}, ok
 
 	case utils.CronJob:
-		obj, ok := event.Object.(*patchV1.CronJob)
-		if !ok {
-			return nil, ok
-		}
+		return w.getCronJob(event)
+	default:
+		return nil, false
+	}
+}
+
+func (w *Watcher) getCronJob(event watchType.Event) (*models.Result, bool) {
+	if obj, ok := event.Object.(*patchV1.CronJob); ok {
 		return &models.Result{
 			Name:        obj.Name,
 			Namespace:   obj.Namespace,
@@ -193,9 +198,21 @@ func (w *Watcher) ensureObject(event watchType.Event) (*models.Result, bool) {
 			Annotations: obj.Spec.JobTemplate.Spec.Template.GetObjectMeta().GetAnnotations(),
 			Labels:      obj.Spec.JobTemplate.Spec.Template.GetObjectMeta().GetLabels(),
 		}, ok
-	default:
-		return nil, false
+	} else {
+		obj, ok := event.Object.(*batchv1beta1.CronJob)
+		if !ok {
+			return nil, ok
+		} else {
+			return &models.Result{
+				Name:        obj.Name,
+				Namespace:   obj.Namespace,
+				Spec:        &obj.Spec.JobTemplate.Spec.Template.Spec,
+				Annotations: obj.Spec.JobTemplate.Spec.Template.GetObjectMeta().GetAnnotations(),
+				Labels:      obj.Spec.JobTemplate.Spec.Template.GetObjectMeta().GetLabels(),
+			}, ok
+		}
 	}
+
 }
 
 func WatchAll(ctx context.Context, config *utils.Config) {
