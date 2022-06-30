@@ -54,6 +54,7 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 				if !ok {
 					log.Errorf("unexpected type error in watching [%s]", w.injector.Kind)
 					error <- fmt.Errorf("unexpected type")
+					return
 				}
 
 				obj, ok := w.ensureObject(event)
@@ -61,9 +62,10 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 				if !ok {
 					log.Errorf("unexpected type error in watching [%s]", w.injector.Kind)
 					error <- fmt.Errorf("unexpected type")
+					return
 				}
 
-				if IsReadForInjection(event, obj) {
+				if IsReadyForInjection(event, obj) {
 					err := w.injector.Inject(ctx, obj, w.config)
 					if err != nil {
 						log.Errorf("failed to inject sidecar for [%s] pod with error : [%s]", obj.Name, err.Error())
@@ -89,7 +91,10 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 	}
 
 }
-func IsReadForInjection(event watchType.Event, obj *models.Result) bool {
+func IsReadyForInjection(event watchType.Event, obj *models.Result) bool {
+	if obj == nil {
+		return false
+	}
 	return utils.ConvertToBooleanOrDefault(obj.Annotations[utils.InjectorAgentAnnotation]) &&
 		(event.Type == watchType.Added || event.Type == watchType.Modified)
 }
