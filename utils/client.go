@@ -80,7 +80,7 @@ func (c *Client) Patch(ctx context.Context, nameSpace string, name string, kind 
 	case Job:
 		return c.Instance.BatchV1().Jobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
 	case CronJob:
-		if obj, err := c.Instance.BatchV1().CronJobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options); err != nil {
+		if obj, err := c.Instance.BatchV1().CronJobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options); err == nil {
 			return obj, err
 		} else {
 			return c.Instance.BatchV1beta1().CronJobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
@@ -101,7 +101,11 @@ func (c *Client) GetWatcher(ctx context.Context, kind string, opts metaV1.ListOp
 	case Job:
 		return c.Instance.BatchV1().Jobs(CoreV1.NamespaceAll).Watch(ctx, opts)
 	case CronJob:
-		return c.Instance.BatchV1().CronJobs(CoreV1.NamespaceAll).Watch(ctx, opts)
+		if obj, err := c.Instance.BatchV1().CronJobs(CoreV1.NamespaceAll).Watch(ctx, opts); err == nil {
+			return obj, err
+		} else {
+			return c.Instance.BatchV1beta1().CronJobs(CoreV1.NamespaceAll).Watch(ctx, opts)
+		}
 	default:
 		return nil, fmt.Errorf("the %s type is not supported", kind)
 	}
