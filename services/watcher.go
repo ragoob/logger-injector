@@ -40,7 +40,6 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 	log.Infof("Start watching loop for kind [%s]", w.injector.Kind)
 	watch, err := w.client.GetWatcher(ctx, w.injector.Kind, metaV1.ListOptions{})
 	if err != nil {
-		log.Fatal(err.Error())
 		return err
 	}
 	channel := watch.ResultChan()

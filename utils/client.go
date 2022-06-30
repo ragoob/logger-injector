@@ -80,7 +80,11 @@ func (c *Client) Patch(ctx context.Context, nameSpace string, name string, kind 
 	case Job:
 		return c.Instance.BatchV1().Jobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
 	case CronJob:
-		return c.Instance.BatchV1().CronJobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
+		if obj, err := c.Instance.BatchV1().CronJobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options); err != nil {
+			return obj, err
+		} else {
+			return c.Instance.BatchV1beta1().CronJobs(nameSpace).Patch(ctx, name, types.MergePatchType, data, options)
+		}
 	default:
 		return nil, fmt.Errorf("the %s type is not supported", kind)
 	}
