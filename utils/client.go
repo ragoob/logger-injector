@@ -25,11 +25,11 @@ func NewClient() (*Client, error) {
 	var config *rest.Config
 	if ConvertToBooleanOrDefault(os.Getenv(InClusterConfig)) {
 		_config, err := rest.InClusterConfig()
-		if err != nil {
+	
 			if err != nil {
 				return nil, err
 			}
-		}
+		
 
 		config = _config
 
