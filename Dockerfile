@@ -1,4 +1,4 @@
-FROM golang:1.18-bullseye
+FROM golang:1.18-alpine
 ENV app /app
 RUN mkdir -p $app
 WORKDIR $app
