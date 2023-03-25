@@ -31,9 +31,5 @@ func NewConfig() (*Config, error) {
 }
 func (c *Config) EnsureRequirements() bool {
 	return c.Elastic.Host != "" &&
-		c.Elastic.Scheme != "" &&
-		c.Elastic.User != "" &&
-		c.Elastic.Password != "" &&
-		c.Elastic.Port > 0 &&
-		c.Elastic.SslVersion != ""
+		c.Elastic.Port > 0
 }
