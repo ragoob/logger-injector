@@ -15,7 +15,7 @@ const (
 	InClusterConfig                   = "IN_CLUSTER_CONFIG"
 	FluentdLogPath                    = "/var/log/td-agent"
 	FluentdBufferPath                 = "/var/log/fluentd-buffers"
-	FluentdConfigPath                 = "/etc/fluent/config.d"
+	FluentdConfigPath                 = "/fluentd/etc/"
 	FluentdBufferVolumeName           = "buffer"
 	FluentdConfigMapVolumeName        = "config-volume-fluentd"
 	FluentdConfigMapVolumeDefaultMode = 511

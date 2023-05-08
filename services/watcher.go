@@ -3,6 +3,7 @@ package loggerInjector
 import (
 	"context"
 	"fmt"
+
 	models "github.com/ragoob/logger-injector/models"
 	utils "github.com/ragoob/logger-injector/utils"
 	"github.com/sirupsen/logrus"
@@ -11,11 +12,12 @@ import (
 	patchV1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	watchType "k8s.io/apimachinery/pkg/watch"
 	"os"
 	"sync"
 	"time"
+
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	watchType "k8s.io/apimachinery/pkg/watch"
 )
 
 type Watcher struct {

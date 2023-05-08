@@ -100,6 +100,10 @@ func createSideCareContainerObject(mainContainer CoreV1.Container, objectName st
 	container.Name = fmt.Sprintf("%s-fluentd-logger", objectName)
 	container.ImagePullPolicy = mainContainer.ImagePullPolicy
 	container.Image = config.FluentdImageRepository
+	container.Env = append(container.Env, CoreV1.EnvVar{
+		Name:  "FLUENTD_ARGS",
+		Value: "-c /fluentd/etc/fluent.conf",
+	})
 	container.VolumeMounts = append(container.VolumeMounts, CoreV1.VolumeMount{
 		Name:      mainContainer.VolumeMounts[0].Name,
 		MountPath: utils.FluentdLogPath,
