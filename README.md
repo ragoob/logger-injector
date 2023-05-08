@@ -44,7 +44,7 @@
 | ELASTIC_SSL_VERIFY    | boolean       |    elastic skip ssl verify  default false |
 | ELASTIC_SCHEME    | string       |    elastic http/https  default https  |
 | ELASTIC_SSL_VERSION    |string       |    elastic tls version  default TLSv1_2 |
-| FLUENTD_IMAGE_REPOSITORY    |string       |  fluentd image  |
+| FLUENTD_IMAGE_REPOSITORY    |string       |  fluentd image  (saravak/fluentd:elastic)|
 | IN_CLUSTER_CONFIG    |boolean       |  Set it true if the app will run inside the cluster  |
 
 ## App required annotations 
