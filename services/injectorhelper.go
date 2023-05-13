@@ -17,12 +17,7 @@ func CreateFluentdConfigMap(ctx context.Context, nameSpace string, objectName st
 	name := fmt.Sprintf("%s-fluentd", objectName)
 	if existing, err := client.Instance.CoreV1().ConfigMaps(nameSpace).Get(ctx, name,
 		meta1.GetOptions{}); err == nil && existing != nil {
-		log.Infof("Deleting exsisting configMap [%s]", name)
-		err := client.Instance.CoreV1().ConfigMaps(nameSpace).Delete(ctx, name, meta1.DeleteOptions{})
-		if err != nil {
-			log.Errorf("failed to delete configmap [%s]", name)
-			return nil, err
-		}
+		return nil, fmt.Errorf("[%s] resource already exist", name)
 	}
 
 	data, err := createDataObject(annotation, config)

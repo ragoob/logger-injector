@@ -68,7 +68,9 @@ func (w *Watcher) watchLoop(ctx context.Context) error {
 				}
 
 				if IsReadyForInjection(event, obj) {
+					w.Lock()
 					err := w.injector.Inject(ctx, obj, w.config)
+					w.Unlock()
 					if err != nil {
 						log.Errorf("failed to inject sidecar for [%s] pod with error : [%s]", obj.Name, err.Error())
 					} else {
